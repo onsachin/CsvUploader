@@ -7,6 +7,12 @@ public static class CsvFileReader
 {
 
 
+    /// <summary>
+    /// ReadHeader
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
     public static async Task<IReadOnlyList<string>> ReadHeaderAsync(Stream stream,
         CancellationToken ct = default)
     {
@@ -16,6 +22,12 @@ public static class CsvFileReader
         return Array.Empty<string>();
     }
 
+    /// <summary>
+    /// ParseWithHeaderAsync
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
     public static async IAsyncEnumerable<(IReadOnlyDictionary<string,string> row,int index)> ParseWithHeaderAsync(Stream stream,
         [EnumeratorCancellation] CancellationToken ct = default)
     {
@@ -30,7 +42,7 @@ public static class CsvFileReader
                 continue;
             }
 
-            var dict = new Dictionary<string, string>();//StringComparison.OrdinalIgnoreCase);
+            var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             for (int i = 0; i < headers.Length; i++)
             {
@@ -40,6 +52,12 @@ public static class CsvFileReader
         }
     }
 
+    /// <summary>
+    /// Parse async
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
     public static async IAsyncEnumerable<IReadOnlyList<string>> ParseAsync(
         Stream stream,
         [EnumeratorCancellation] CancellationToken ct = default
@@ -65,19 +83,42 @@ public static class CsvFileReader
         }
     }
 
+    /// <summary>
+    /// Parse line
+    /// </summary>
+    /// <param name="line"></param>
+    /// <returns></returns>
     private static IReadOnlyList<string> ParseLine(ReadOnlySpan<char> line)
     {
         var fields = new List<string>();
         var currentField = new StringBuilder();
-        foreach (var c in line)
+        var inQuotes = false;
+        for (int i = 0; i < line.Length; i++)
         {
-            if (c == ',' && c != '"')
+            char c = line[i];
+
+            if (c == '"')
+            {
+                if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+                {
+                    // Escaped quote inside quoted field
+                    currentField.Append('"');
+                    i++;
+                }
+                else
+                {
+                    inQuotes = !inQuotes;
+                }
+            }
+            else if (c == ',' && !inQuotes)
             {
                 fields.Add(currentField.ToString());
                 currentField.Clear();
             }
-
-            currentField.Append(c);
+            else
+            {
+                currentField.Append(c);
+            }
         }
 
         fields.Add(currentField.ToString());
