@@ -1,3 +1,4 @@
+using System.Text.Json;
 using CsvUploader.Web.CsvParser;
 
 
@@ -21,6 +22,9 @@ app.UseHttpsRedirection();
 app.MapGet("/getfiles", async (CancellationToken ct) =>
 {
     var data =await ReadJsonData(ct);
+   var jsonData= JsonSerializer.Serialize(data);
+    
+    var csObjects=JsonSerializer.Deserialize<PersontandardRow[]>(jsonData);
     return Results.Ok(data);
 });
 
@@ -29,7 +33,7 @@ app.Run();
 
 
 
-async Task<IReadOnlyList<PersontandardRow>> ReadJsonData(CancellationToken ct = default)
+async Task<IReadOnlyList<object>> ReadJsonData(CancellationToken ct = default)
 {
     var fileStream=(Stream)File.OpenRead("Data/people-100.csv");
     var buffer = new MemoryStream();
@@ -41,7 +45,7 @@ async Task<IReadOnlyList<PersontandardRow>> ReadJsonData(CancellationToken ct = 
     var data = await CsvFileReader.ReadHeaderAsync(new MemoryStream(buffer.ToArray()), ct);
    
     //var data1 = await CsvFileReader.ParseAsync(new MemoryStream(buffer.ToArray()), ct);
-    var list = new List<PersontandardRow>();
+    var list = new List<dynamic>();
     await foreach (var (row, rowIndex)
                    in CsvFileReader.ParseWithHeaderAsync(new MemoryStream(buffer.ToArray()), ct))
     {
@@ -52,19 +56,21 @@ async Task<IReadOnlyList<PersontandardRow>> ReadJsonData(CancellationToken ct = 
     return list;
 }
 
-PersontandardRow MapRow(IReadOnlyDictionary<string, string> row, int rowIndex)
+object MapRow(IReadOnlyDictionary<string, string> row, int rowIndex)
 {
-    return new PersontandardRow(
-        Index:0,
-        Salary:0,
-        UserId:row.GetValueOrDefault("User Id", string.Empty),
-        FirstName:row.GetValueOrDefault("First Name", string.Empty),
-        LastName:row.GetValueOrDefault("Last Name", string.Empty),
-        Email:row.GetValueOrDefault("Email", string.Empty),
-        Phone:row.GetValueOrDefault("Phone Number", string.Empty),
-        DateOfBirth:row.GetValueOrDefault("Date Of Birth", string.Empty),
-        JobTitle:row.GetValueOrDefault("Job Title", string.Empty),
-        Sex: row.GetValueOrDefault("Sex", string.Empty)
-           
-    );
+    return new
+    {
+        Index= 0,
+        Salary= 0,
+        UserId= row.GetValueOrDefault("User Id", string.Empty),
+        FirstName= row.GetValueOrDefault("First Name", string.Empty),
+        LastName= row.GetValueOrDefault("Last Name", string.Empty),
+        Email= row.GetValueOrDefault("Email", string.Empty),
+        Phone=row.GetValueOrDefault("Phone Number", string.Empty),
+        DateOfBirth= row.GetValueOrDefault("Date Of Birth", string.Empty),
+        JobTitle= row.GetValueOrDefault("Job Title", string.Empty),
+        Sex=row.GetValueOrDefault("Sex", string.Empty)
+    
+    };
+    
 }
