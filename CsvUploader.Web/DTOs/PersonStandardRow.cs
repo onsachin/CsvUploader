@@ -39,17 +39,19 @@
      public string? DateOfBirth { get; init; }
      public string? JobTitle { get; init; }
      public int? Salary { get; init; }
+    public int? Age { get; init; }
 
  }
  
  
- [JsonConverter(typeof(SourceMapConverter<PersontandardRow>))]
- public class Persontandard
+[JsonConverter(typeof(SourceMapConverter<PersontEntity>))]
+ public class PersontEntity
  {
+    [SourceMap("Index")] 
      public int? Index { get; init; }
 
-     [SourceMap("id", "customerId","UserId")] 
-     public string? id { get; init; }
+     [SourceMap("UserId")] 
+     public string? Id { get; init; }
     
      public string? FirstName { get; init; }
      public string? LastName { get; init; }
@@ -58,6 +60,9 @@
      public string? Phone { get; init; }
      public string? DateOfBirth { get; init; }
      public string? JobTitle { get; init; }
-     public int? Salary { get; init; }
+     [SourceMap("Salary")] 
+     public int? MySalary { get; init; }
+     [SourceMap("Age")] 
+     public int? MyAge { get; init; }
 
  }
